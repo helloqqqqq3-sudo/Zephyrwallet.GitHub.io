@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  
+  <!-- iOS Fullscreen Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Zephyr Wallet">
+  
+  <title>Zephyr Wallet</title>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      padding: calc(env(safe-area-inset-top) + 20px) 20px calc(env(safe-area-inset-bottom) + 20px) 20px;
+      background-color: #000000;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      user-select: none;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    h1 { font-size: 32px; margin: 0; font-weight: 700; }
+    .add-btn {
+      background: #1c1c1e;
+      color: #0a84ff;
+      border: none;
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      font-size: 22px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Visa Card */
+    .visa-card {
+      background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      padding: 22px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.7);
+      margin-bottom: 22px;
+    }
+    .visa-card::before {
+      content: "";
+      position: absolute;
+      top: -50%; right: -30%;
+      width: 240px; height: 240px;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.25), transparent 70%);
+      pointer-events: none;
+    }
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+    .bank-name {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #e2e8f0;
+    }
+    .visa-logo {
+      font-size: 24px;
+      font-weight: 900;
+      font-style: italic;
+      letter-spacing: -1px;
+      color: #ffffff;
+    }
+    .chip {
+      width: 42px; height: 30px;
+      background: linear-gradient(135deg, #fde047, #ca8a04);
+      border-radius: 6px;
+      margin-bottom: 16px;
+    }
+    .balance-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #94a3b8;
+      margin: 0 0 4px 0;
+    }
+    .balance-amount {
+      font-size: 24px;
+      font-weight: 800;
+      margin: 0;
+      color: #ffffff;
+    }
+    .balance-exact {
+      font-size: 10px;
+      color: #7dd3fc;
+      word-break: break-all;
+      margin: 4px 0 16px 0;
+      font-family: monospace;
+    }
+    .card-bottom {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #cbd5e1;
+      font-family: monospace;
+    }
+
+    /* Pay Button */
+    .pay-btn {
+      width: 100%;
+      background: #ffffff;
+      color: #000000;
+      border: none;
+      border-radius: 14px;
+      padding: 15px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .pay-btn:active { opacity: 0.8; }
+
+    /* Transactions */
+    h2 { font-size: 19px; margin: 0 0 12px 0; }
+    .tx-list {
+      background: #1c1c1e;
+      border-radius: 16px;
+      padding: 6px 16px;
+    }
+    .tx-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #2c2c2e;
+    }
+    .tx-item:last-child { border-bottom: none; }
+    .tx-title { font-size: 15px; font-weight: 600; margin: 0 0 2px 0; }
+    .tx-date { font-size: 12px; color: #8e8e93; margin: 0; }
+    .tx-amount { font-size: 15px; font-weight: 600; }
+
+    /* Tap to Pay Overlay */
+    #pay-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 99;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .nfc-ring {
+      width: 90px; height: 90px;
+      border-radius: 50%;
+      border: 4px solid #0a84ff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      margin-bottom: 16px;
+      animation: pulse 1.2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(10, 132, 255, 0.7); }
+      70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(10, 132, 255, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(10, 132, 255, 0); }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Zephyr Wallet</h1>
+    <button class="add-btn" onclick="addPurchase()">+</button>
+  </header>
+
+  <div class="visa-card">
+    <div class="card-top">
+      <span class="bank-name">ZEPHYR RESERVE</span>
+      <span class="visa-logo">VISA</span>
+    </div>
+    <div class="chip"></div>
+    <p class="balance-label">Available Balance</p>
+    <p class="balance-amount">$9,999 Vigintillion</p>
+    <p class="balance-exact">$9,999,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000,000.00</p>
+    <div class="card-bottom">
+      <span>•••• •••• •••• 9999</span>
+      <span>INFINITE</span>
+    </div>
+  </div>
+
+  <button class="pay-btn" onclick="triggerPay()"> Pay / Tap to Pay</button>
+
+  <h2>Latest Transactions</h2>
+  <div class="tx-list" id="tx-list">
+    <div class="tx-item">
+      <div>
+        <p class="tx-title">Zephyr Store</p>
+        <p class="tx-date">Today • ZephyrOS</p>
+      </div>
+      <span class="tx-amount">-$0.00</span>
+    </div>
+    <div class="tx-item">
+      <div>
+        <p class="tx-title">Universal Central Bank</p>
+        <p class="tx-date">Deposit • Verified</p>
+      </div>
+      <span class="tx-amount" style="color:#30d158;">+$9,999 Vigintillion</span>
+    </div>
+  </div>
+
+  <div id="pay-modal" onclick="this.style.display='none'">
+    <div class="nfc-ring">)))</div>
+    <p style="font-size:20px; font-weight:700; margin:0 0 6px 0;">Hold Near Reader</p>
+    <p style="font-size:14px; color:#8e8e93;">Balance: $9,999 Vigintillion</p>
+  </div>
+
+  <script>
+    function triggerPay() {
+      const modal = document.getElementById('pay-modal');
+      modal.style.display = 'flex';
+      setTimeout(() => {
+        modal.style.display = 'none';
+      }, 2500);
+    }
+
+    function addPurchase() {
+      const item = prompt("Enter store or item name:");
+      if (!item) return;
+      const price = prompt("Enter amount (e.g. $500.00):") || "$100.00";
+      const list = document.getElementById('tx-list');
+      const row = document.createElement('div');
+      row.className = 'tx-item';
+      row.innerHTML = `<div><p class="tx-title">${item}</p><p class="tx-date">Just now • Visa •••• 9999</p></div><span class="tx-amount">-${price}</span>`;
+      list.prepend(row);
+    }
+  </script>
+
+</body>
+</html>
